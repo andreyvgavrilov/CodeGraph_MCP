@@ -2,7 +2,10 @@
   "name": "codegraph-mcp",
   "displayName": "CodeGraph MCP",
   "description": "Provides code analysis tools using Model Context Protocol",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "sponsor": {
+    "url": "https://github.com/sponsors/andreyvgavrilov"
+  },
   "engines": {
     "vscode": "^1.95.0"
   },
@@ -15,13 +18,23 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-      "configuration": {
+    "configuration": {
       "title": "CodeGraph MCP",
       "properties": {
-        "codegraph.mcpPort": {
+        "codegraph.mcp.port": {
           "type": "number",
           "default": 6010,
-          "description": "Port number for the MCP SSE server"
+          "description": "The port for the SSE MCP server."
+        },
+        "codegraph.analysis.maxResults": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum number of references to return at once."
+        },
+        "codegraph.analysis.includeDeclaration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to include the original definition in the search results."
         }
       }
     }

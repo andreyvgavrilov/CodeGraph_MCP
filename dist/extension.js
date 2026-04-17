@@ -34533,7 +34533,7 @@ __export(extension_exports, {
   deactivate: () => deactivate
 });
 module.exports = __toCommonJS(extension_exports);
-var vscode2 = __toESM(require("vscode"));
+var vscode3 = __toESM(require("vscode"));
 
 // node_modules/zod/v3/external.js
 var external_exports = {};
@@ -48664,7 +48664,7 @@ var CodeAnalyzer = class {
    * @param symbolName The name of the symbol to find references for
    * @returns A promise that resolves to an array of CodeReference objects, or null if symbol not found
    */
-  async findReferences(symbolName) {
+  async findReferences(symbolName, options = {}) {
     try {
       const symbols = await vscode.commands.executeCommand(
         "vscode.executeWorkspaceSymbolProvider",
@@ -48678,7 +48678,7 @@ var CodeAnalyzer = class {
       const uri = symbolInfo.location.uri;
       const range = symbolInfo.location.range;
       const position = range.start;
-      const references = await vscode.commands.executeCommand(
+      let references = await vscode.commands.executeCommand(
         "vscode.executeReferenceProvider",
         uri,
         position
@@ -48686,6 +48686,16 @@ var CodeAnalyzer = class {
       if (!references || references.length === 0) {
         console.log(`No references found for symbol "${symbolName}"`);
         return [];
+      }
+      if (options.includeDeclaration === false) {
+        references = references.filter((ref) => {
+          const isSameFile = ref.uri.toString() === uri.toString();
+          const isSameRange = ref.range.isEqual(range);
+          return !(isSameFile && isSameRange);
+        });
+      }
+      if (options.maxResults !== void 0 && options.maxResults > 0) {
+        references = references.slice(0, options.maxResults);
       }
       const cleanReferences = references.map((location) => {
         return this.mapLocationToReference(location);
@@ -48720,6 +48730,7 @@ var CodeAnalyzer = class {
 
 // src/mcpApp.ts
 var import_express = __toESM(require_express2());
+var vscode2 = __toESM(require("vscode"));
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/sse.js
 var import_node_crypto = require("node:crypto");
@@ -48890,7 +48901,12 @@ function createMcpApp(codeAnalyzer, logger, mcpServer) {
     async (input) => {
       try {
         logger.appendLine(`[MCP] Finding references for symbol: ${input.symbolName}`);
-        const references = await codeAnalyzer.findReferences(input.symbolName);
+        const config2 = vscode2.workspace.getConfiguration("codegraph.analysis");
+        const options = {
+          maxResults: config2.get("maxResults", 50),
+          includeDeclaration: config2.get("includeDeclaration", true)
+        };
+        const references = await codeAnalyzer.findReferences(input.symbolName, options);
         if (references === null) {
           return {
             content: [
@@ -49020,13 +49036,13 @@ async function startMCPServer(codeAnalyzer, port = 6010) {
   });
 }
 async function activate(context) {
-  outputChannel = vscode2.window.createOutputChannel("CodeGraph MCP");
+  outputChannel = vscode3.window.createOutputChannel("CodeGraph MCP");
   outputChannel.show();
   outputChannel.appendLine("CodeGraph MCP extension is starting...");
   try {
     const codeAnalyzer = new CodeAnalyzer();
-    const config2 = vscode2.workspace.getConfiguration("codegraph");
-    const port = config2.get("mcpPort", 6010);
+    const config2 = vscode3.workspace.getConfiguration("codegraph");
+    const port = config2.get("mcp.port", 6010);
     const serverDisposable = await startMCPServer(codeAnalyzer, port);
     context.subscriptions.push(serverDisposable);
     outputChannel.appendLine("\u2713 Extension activated successfully");

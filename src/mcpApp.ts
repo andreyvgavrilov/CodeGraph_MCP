@@ -1,4 +1,5 @@
 import express, { Request, Response, Express } from 'express';
+import * as vscode from 'vscode';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { ICodeAnalyzer, AnalyzeReferencesInput, analyzeReferencesShape } from './types.js';
@@ -24,7 +25,14 @@ export function createMcpApp(
       try {
         logger.appendLine(`[MCP] Finding references for symbol: ${input.symbolName}`);
 
-        const references = await codeAnalyzer.findReferences(input.symbolName);
+        // Read current configuration
+        const config = vscode.workspace.getConfiguration('codegraph.analysis');
+        const options = {
+          maxResults: config.get<number>('maxResults', 50),
+          includeDeclaration: config.get<boolean>('includeDeclaration', true),
+        };
+
+        const references = await codeAnalyzer.findReferences(input.symbolName, options);
 
         if (references === null) {
           return {

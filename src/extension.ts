@@ -71,7 +71,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Step 2: Get port from configuration
     const config = vscode.workspace.getConfiguration('codegraph');
-    const port = config.get<number>('mcpPort', 6010);
+    const port = config.get<number>('mcp.port', 6010);
 
     // Step 3: Start MCP server
     const serverDisposable = await startMCPServer(codeAnalyzer, port);

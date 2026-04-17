@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ICodeAnalyzer, CodeReference } from './types.js';
+import { ICodeAnalyzer, CodeReference, AnalysisOptions } from './types.js';
 
 /**
  * CodeAnalyzer class provides functionality to find references to code symbols
@@ -12,7 +12,7 @@ export class CodeAnalyzer implements ICodeAnalyzer {
    * @param symbolName The name of the symbol to find references for
    * @returns A promise that resolves to an array of CodeReference objects, or null if symbol not found
    */
-  async findReferences(symbolName: string): Promise<CodeReference[] | null> {
+  async findReferences(symbolName: string, options: AnalysisOptions = {}): Promise<CodeReference[] | null> {
     try {
       // Step 1: Find the symbol definition using workspace symbol provider
       const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
@@ -33,7 +33,7 @@ export class CodeAnalyzer implements ICodeAnalyzer {
       const position = range.start;
 
       // Step 2: Find all references using the reference provider
-      const references = await vscode.commands.executeCommand<vscode.Location[]>(
+      let references = await vscode.commands.executeCommand<vscode.Location[]>(
         'vscode.executeReferenceProvider',
         uri,
         position
@@ -43,6 +43,21 @@ export class CodeAnalyzer implements ICodeAnalyzer {
       if (!references || references.length === 0) {
         console.log(`No references found for symbol "${symbolName}"`);
         return [];
+      }
+
+      // Filter out declaration if requested
+      if (options.includeDeclaration === false) {
+        references = references.filter(ref => {
+          // Check if reference is same as definition
+          const isSameFile = ref.uri.toString() === uri.toString();
+          const isSameRange = ref.range.isEqual(range);
+          return !(isSameFile && isSameRange);
+        });
+      }
+
+      // Apply max results limit
+      if (options.maxResults !== undefined && options.maxResults > 0) {
+        references = references.slice(0, options.maxResults);
       }
 
       // Step 3: Map references to clean JSON format

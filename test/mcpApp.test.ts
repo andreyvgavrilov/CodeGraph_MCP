@@ -4,6 +4,17 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpApp } from '../src/mcpApp.js';
 import { ICodeAnalyzer } from '../src/types.js';
 
+// Mock vscode
+vi.mock('vscode', () => {
+  return {
+    workspace: {
+      getConfiguration: vi.fn(() => ({
+        get: vi.fn((key, defaultValue) => defaultValue)
+      }))
+    }
+  };
+});
+
 describe('MCP Express App', () => {
   let app: any;
   let mockAnalyzer: any;
