@@ -2,7 +2,7 @@
   "name": "codegraph-mcp",
   "displayName": "CodeGraph MCP",
   "description": "Provides code analysis tools using Model Context Protocol",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "publisher": "AndreyGavrilov",
   "author": "Andrey Gavrilov",
   "sponsor": {
@@ -52,6 +52,7 @@
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
+    "@types/cors": "^2.8.19",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.10.0",
     "@types/sinon": "^21.0.1",
@@ -63,7 +64,7 @@
     "chai": "^6.2.2",
     "esbuild": "^0.28.0",
     "eslint": "^8.56.0",
-    "mocha": "^11.7.5",
+    "mocha": "^11.3.0",
     "sinon": "^21.1.2",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
@@ -74,6 +75,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@types/express": "^4.17.0",
+    "cors": "^2.8.6",
     "express": "^4.18.0",
     "zod": "^3.25.76"
   }

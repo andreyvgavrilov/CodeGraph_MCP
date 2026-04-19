@@ -1,5 +1,6 @@
 import express, { Request, Response, Express } from 'express';
 import * as vscode from 'vscode';
+import cors from 'cors';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
@@ -15,6 +16,7 @@ export function createMcpApp(
   mcpServer: McpServer
 ): Express {
   const app = express();
+  app.use(cors());
   app.use(express.json());
 
   const transports = new Map<string, StreamableHTTPServerTransport>();
