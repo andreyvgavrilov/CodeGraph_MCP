@@ -31,15 +31,15 @@ This extension acts as a bridge. When an AI asks "Where is this model used?", Co
     2. Run `code --install-extension codegraph-mcp-1.0.0.vsix`.
 
 ### 2. Using with External AI (MCP)
-The extension starts an **SSE (Server-Sent Events)** server on activation.
-* **Default Endpoint**: `http://localhost:6010/sse`
+The extension starts an **MCP (Model Context Protocol)** server on activation using the unified Streamable HTTP transport.
+* **Default Endpoint**: `http://localhost:6010/mcp`
 * **Setup in Claude Desktop**:
     Add this to your `claude_desktop_config.json`:
     ```json
     {
       "mcpServers": {
         "codegraph": {
-          "url": "http://localhost:6010/sse"
+          "url": "http://localhost:6010/mcp"
         }
       }
     }
@@ -53,7 +53,7 @@ You can customize the extension behavior in `Settings > Extensions > CodeGraph M
 
 | Setting | Default | Description |
 | :--- | :--- | :--- |
-| `codegraph.mcp.port` | `6010` | The port for the SSE MCP server. |
+| `codegraph.mcp.port` | `6010` | The port for the MCP server. |
 | `codegraph.analysis.maxResults` | `50` | Maximum number of references to return to the AI at once. |
 | `codegraph.analysis.includeDeclaration` | `true` | Whether to include the original definition in the search results. |
 

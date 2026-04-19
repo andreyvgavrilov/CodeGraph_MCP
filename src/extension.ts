@@ -9,7 +9,7 @@ let outputChannel: vscode.OutputChannel;
 let httpServer: HTTPServer | null = null;
 
 /**
- * Creates and starts the MCP server with SSE transport
+ * Creates and starts the MCP server with Streamable HTTP transport
  */
 async function startMCPServer(
   codeAnalyzer: CodeAnalyzer,
@@ -29,8 +29,7 @@ async function startMCPServer(
       // Start HTTP server
       httpServer = app.listen(port, () => {
         outputChannel.appendLine(`[MCP] Server started successfully on port ${port}`);
-        outputChannel.appendLine(`[MCP] SSE URL: http://localhost:${port}/sse`);
-        outputChannel.appendLine(`[MCP] Messages URL: http://localhost:${port}/messages`);
+        outputChannel.appendLine(`[MCP] Unified Endpoint: http://localhost:${port}/mcp`);
 
         resolve({
           dispose: () => {

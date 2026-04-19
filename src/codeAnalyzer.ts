@@ -9,10 +9,47 @@ import { ICodeAnalyzer, CodeReference, AnalysisOptions } from './types.js';
 export class CodeAnalyzer implements ICodeAnalyzer {
   /**
    * Find all references to a given symbol in the workspace
-   * @param symbolName The name of the symbol to find references for
-   * @returns A promise that resolves to an array of CodeReference objects, or null if symbol not found
    */
   async findReferences(symbolName: string, options: AnalysisOptions = {}): Promise<CodeReference[] | null> {
+    return this.executeLocationProvider('vscode.executeReferenceProvider', symbolName, options);
+  }
+
+  /**
+   * Find definitions for a given symbol
+   */
+  async findDefinitions(symbolName: string, options: AnalysisOptions = {}): Promise<CodeReference[] | null> {
+    return this.executeLocationProvider('vscode.executeDefinitionProvider', symbolName, options);
+  }
+
+  /**
+   * Find type definitions for a given symbol
+   */
+  async findTypeDefinitions(symbolName: string, options: AnalysisOptions = {}): Promise<CodeReference[] | null> {
+    return this.executeLocationProvider('vscode.executeTypeDefinitionProvider', symbolName, options);
+  }
+
+  /**
+   * Find declarations for a given symbol
+   */
+  async findDeclarations(symbolName: string, options: AnalysisOptions = {}): Promise<CodeReference[] | null> {
+    return this.executeLocationProvider('vscode.executeDeclarationProvider', symbolName, options);
+  }
+
+  /**
+   * Find implementations for a given symbol
+   */
+  async findImplementations(symbolName: string, options: AnalysisOptions = {}): Promise<CodeReference[] | null> {
+    return this.executeLocationProvider('vscode.executeImplementationProvider', symbolName, options);
+  }
+
+  /**
+   * Centerlalized logic to find a symbol and execute a location provider
+   */
+  private async executeLocationProvider(
+    command: string,
+    symbolName: string,
+    options: AnalysisOptions
+  ): Promise<CodeReference[] | null> {
     try {
       // Step 1: Find the symbol definition using workspace symbol provider
       const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
@@ -32,42 +69,55 @@ export class CodeAnalyzer implements ICodeAnalyzer {
       const range = symbolInfo.location.range;
       const position = range.start;
 
-      // Step 2: Find all references using the reference provider
-      let references = await vscode.commands.executeCommand<vscode.Location[]>(
-        'vscode.executeReferenceProvider',
+      // Step 2: Execute the requested provider
+      let locations = await vscode.commands.executeCommand<vscode.Location[] | vscode.Location | vscode.LocationLink[]>(
+        command,
         uri,
         position
       );
 
-      // Handle case where no references are found
-      if (!references || references.length === 0) {
-        console.log(`No references found for symbol "${symbolName}"`);
+      // Handle case where no locations are found
+      if (!locations) {
+        console.log(`No results found for command "${command}" and symbol "${symbolName}"`);
         return [];
       }
 
-      // Filter out declaration if requested
+      // Normalize locations (some providers return a single Location or LocationLink[])
+      let locationArray: vscode.Location[] = [];
+      if (Array.isArray(locations)) {
+        locationArray = locations.map(loc => {
+          if ('targetUri' in loc) {
+            // It's a LocationLink
+            return new vscode.Location(loc.targetUri, loc.targetRange);
+          }
+          return loc as vscode.Location;
+        });
+      } else {
+        locationArray = [locations as vscode.Location];
+      }
+
+      // Filter out declaration if requested (mostly relevant for references)
       if (options.includeDeclaration === false) {
-        references = references.filter(ref => {
-          // Check if reference is same as definition
-          const isSameFile = ref.uri.toString() === uri.toString();
-          const isSameRange = ref.range.isEqual(range);
+        locationArray = locationArray.filter(loc => {
+          const isSameFile = loc.uri.toString() === uri.toString();
+          const isSameRange = loc.range.isEqual(range);
           return !(isSameFile && isSameRange);
         });
       }
 
       // Apply max results limit
       if (options.maxResults !== undefined && options.maxResults > 0) {
-        references = references.slice(0, options.maxResults);
+        locationArray = locationArray.slice(0, options.maxResults);
       }
 
-      // Step 3: Map references to clean JSON format
-      const cleanReferences: CodeReference[] = references.map((location: vscode.Location) => {
+      // Step 3: Map locations to clean JSON format
+      const cleanReferences: CodeReference[] = locationArray.map((location: vscode.Location) => {
         return this.mapLocationToReference(location);
       });
 
       return cleanReferences;
     } catch (error) {
-      console.error(`Error finding references for symbol "${symbolName}":`, error);
+      console.error(`Error executing ${command} for symbol "${symbolName}":`, error);
       return null;
     }
   }

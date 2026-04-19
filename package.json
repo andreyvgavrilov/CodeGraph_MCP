@@ -2,7 +2,9 @@
   "name": "codegraph-mcp",
   "displayName": "CodeGraph MCP",
   "description": "Provides code analysis tools using Model Context Protocol",
-  "version": "0.0.2",
+  "version": "0.0.4",
+  "publisher": "AndreyGavrilov",
+  "author": "Andrey Gavrilov",
   "sponsor": {
     "url": "https://github.com/sponsors/andreyvgavrilov"
   },
@@ -24,7 +26,7 @@
         "codegraph.mcp.port": {
           "type": "number",
           "default": 6010,
-          "description": "The port for the SSE MCP server."
+          "description": "The port for the MCP server."
         },
         "codegraph.analysis.maxResults": {
           "type": "number",
